@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Delta</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div id="landing-page">
+        <div class="landing-content">
+            <div class="logo-circle"><i class="fas fa-university"></i></div>
+            <h1>Campus Delta</h1>
+            <p>Your AI-Powered College Assistant. <br>Ask about faculty, mess, labs, or notes.</p>
+            <button id="start-btn" onclick="enterApp()">Start Chat <i class="fas fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden">
+        
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fas fa-graduation-cap"></i> Campus Delta
+            </div>
+            <nav>
+                <button class="active"><i class="fas fa-comment-alt"></i> Chat</button>
+                <button onclick="alert('Demo: Notes Module')"><i class="fas fa-book"></i> Notes</button>
+                <button onclick="alert('Demo: Mess Menu')"><i class="fas fa-utensils"></i> Mess</button>
+                <button onclick="fetchComplaints()"><i class="fas fa-exclamation-circle"></i> Admin</button>
+            </nav>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=Student&background=random" alt="User">
+                <div class="user-info">
+                    <span>Student User</span>
+                    <small>Online</small>
+                </div>
+            </div>
+        </aside>
+
+        <main class="chat-interface">
+            <header>
+                <div class="chat-header-info">
+                    <h3>Campus Assistant 🤖</h3>
+                    <span>Always here to help</span>
+                </div>
+            </header>
+
+            <div id="chat-box" class="chat-box">
+                <div class="message bot">
+                    <p>Hello! 👋 I'm your Campus Assistant. Ask me anything!</p>
+                    <span class="time">Just now</span>
+                </div>
+            </div>
+            
+            <div class="suggestions">
+                <span onclick="sendQuickMsg('Who teaches Data Structures?')">Who teaches DS?</span>
+                <span onclick="sendQuickMsg('What is the mess menu?')">Mess Menu</span>
+                <span onclick="sendQuickMsg('Where is Lab 204?')">Find Lab 204</span>
+                <span onclick="sendQuickMsg('Download OOP Question Paper')">OOP Notes</span>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Type a message..." onkeypress="handleEnter(event)">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </main>
+    </div>
+
+
+    <div id="auth-overlay" class="auth-overlay">
+    <div class="auth-box">
+        <div class="logo-circle"><i class="fas fa-shield-alt"></i></div>
+        <h2>Secure Login</h2>
+        <p>Please sign in to access Campus Delta</p>
+        
+        <div class="input-group">
+            <input type="text" id="auth-username" placeholder="Username">
+        </div>
+        <div class="input-group">
+            <input type="password" id="auth-password" placeholder="Password">
+        </div>
+        
+        <button onclick="handleLogin()">Sign In</button>
+        <button class="secondary-btn" onclick="handleRegister()">Create Account</button>
+        <p id="auth-msg"></p>
+    </div>
+</div>
+
+    <script src="script.js"></script>
+</body>
+</html>

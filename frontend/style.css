@@ -1,0 +1,109 @@
+:root {
+    --primary: #4f46e5;
+    --primary-light: #eef2ff;
+    --bg: #f3f4f6;
+    --chat-bg: #ffffff;
+    --user-msg: #4f46e5;
+    --bot-msg: #f3f4f6;
+    --text: #1f2937;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+body { background: var(--bg); height: 100vh; overflow: hidden; }
+
+/* Landing Page */
+#landing-page {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, #0b1d6a, #213cb8);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 10; transition: transform 0.5s ease;
+}
+.landing-content { text-align: center; color: white; }
+.logo-circle { font-size: 4rem; margin-bottom: 20px; }
+h1 { font-size: 3rem; margin-bottom: 10px; }
+#start-btn {
+    margin-top: 20px; padding: 12px 30px; border: none; border-radius: 30px;
+    font-size: 1.2rem; cursor: pointer; background: white; color: var(--primary);
+    font-weight: bold; transition: 0.3s;color: #0b1d6a;
+}
+#start-btn:hover { transform: scale(1.05); }
+
+/* Main App */
+.hidden { display: none !important; }
+#app-container { display: flex; height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+    width: 260px; background: rgb(180, 192, 224); padding: 20px; display: flex; flex-direction: column;
+    border-right: 1px solid #ddd;color: #27262bfe;
+}
+.brand { font-size: 1.5rem; font-weight: bold; color: var(--primary); margin-bottom: 40px; }
+.sidebar nav button {
+    width: 100%; padding: 12px; margin-bottom: 10px; border: none; background: transparent;
+    text-align: left; font-size: 1rem; color: #666; cursor: pointer; border-radius: 8px;
+}
+.sidebar nav button:hover, .sidebar nav button.active { background: var(--primary-light); color: var(--primary); }
+.user-profile { margin-top: auto; display: flex; align-items: center; gap: 10px; }
+.user-profile img { width: 40px; border-radius: 50%; }
+
+/* Chat Interface */
+.chat-interface { flex: 1; display: flex; flex-direction: column; background: rgb(180, 192, 224); }
+header { padding: 20px; border-bottom: 1px solid #eee; }
+.chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+
+/* Messages */
+.message { max-width: 70%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; position: relative; }
+.message.user { align-self: flex-end; background: var(--user-msg); color: white; border-bottom-right-radius: 2px; }
+.message.bot { align-self: flex-start; background: var(--bot-msg); color: var(--text); border-bottom-left-radius: 2px; }
+.time { font-size: 0.7rem; opacity: 0.7; display: block; margin-top: 5px; text-align: right; }
+
+/* Suggestions */
+.suggestions { padding: 10px 20px; display: flex; gap: 10px; overflow-x: auto; }
+.suggestions span {
+    background: var(--primary-light); color: var(--primary); padding: 8px 15px;
+    border-radius: 20px; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+}
+
+/* Input Area */
+.input-area { padding: 20px; border-top: 1px solid #eee; display: flex; gap: 10px; }
+input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; outline: none; }
+.input-area button {
+    width: 45px; height: 45px; border-radius: 50%; background: var(--primary);
+    color: white; border: none; cursor: pointer; font-size: 1.1rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .sidebar { display: none; } /* Hide sidebar on mobile for simplicity */
+    h1 { font-size: 2rem; }
+}
+
+/* Auth Overlay Styles */
+.auth-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(79, 70, 229, 0.95); /* Thick Blue overlay */
+    z-index: 1000;
+    display: flex; justify-content: center; align-items: center;
+}
+
+.auth-box {
+    background: white; padding: 40px; border-radius: 20px;
+    width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.input-group input {
+    width: 100%; padding: 12px; margin-bottom: 15px;
+    border: 1px solid #ddd; border-radius: 8px;
+}
+
+.auth-box button {
+    width: 100%; padding: 12px; background: var(--primary); color: white;
+    border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; margin-bottom: 10px;
+}
+
+.auth-box .secondary-btn {
+    background: transparent; color: var(--primary); border: 1px solid var(--primary);
+}
+
+#auth-msg { color: red; margin-top: 10px; font-size: 0.9rem; }
