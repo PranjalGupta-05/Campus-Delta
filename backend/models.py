@@ -29,6 +29,8 @@ class FacultySchema(BaseModel):
     class Config:
         from_attributes = True
 
+from pydantic import BaseModel
+
 class ChatRequest(BaseModel):
     message: str
 
@@ -36,11 +38,10 @@ class ComplaintRequest(BaseModel):
     category: str
     text: str
 
-# --- NEW AUTH MODELS ---
 class UserCreate(BaseModel):
-    username: str
+    email: str  # STRICTLY EMAIL
     password: str
 
 class UserLogin(BaseModel):
-    username: str
+    email: str  # STRICTLY EMAIL
     password: str

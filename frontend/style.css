@@ -36,7 +36,7 @@ h1 { font-size: 3rem; margin-bottom: 10px; }
 /* Sidebar */
 .sidebar {
     width: 260px; background: rgb(180, 192, 224); padding: 20px; display: flex; flex-direction: column;
-    border-right: 1px solid #ddd;color: #27262bfe;
+    border-right: 1px solid #ddd;
 }
 .brand { font-size: 1.5rem; font-weight: bold; color: var(--primary); margin-bottom: 40px; }
 .sidebar nav button {

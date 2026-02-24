@@ -71,22 +71,24 @@
 
     <div id="auth-overlay" class="auth-overlay">
     <div class="auth-box">
-        <div class="logo-circle"><i class="fas fa-shield-alt"></i></div>
-        <h2>Secure Login</h2>
-        <p>Please sign in to access Campus Delta</p>
-        
-        <div class="input-group">
-            <input type="text" id="auth-username" placeholder="Username">
-        </div>
-        <div class="input-group">
-            <input type="password" id="auth-password" placeholder="Password">
-        </div>
-        
-        <button onclick="handleLogin()">Sign In</button>
-        <button class="secondary-btn" onclick="handleRegister()">Create Account</button>
-        <p id="auth-msg"></p>
+    <div class="logo-circle"><i class="fas fa-shield-alt"></i></div>
+    <h2>Secure Login</h2>
+    <p>Please sign in to access Campus AI</p>
+    
+    <div class="input-group">
+        <input type="email" id="auth-email" placeholder="Enter your Email ID">
     </div>
+    <div class="input-group">
+        <input type="password" id="auth-password" placeholder="Password">
+    </div>
+    
+    <button onclick="handleLogin()">Sign In</button>
+    <button class="secondary-btn" onclick="handleRegister()">Create Account</button>
+    <p id="auth-msg"></p>
 </div>
+</div>
+
+<footer><p>&copy; All Rights Of the Model Are Reserved To TEAM 118.</p></footer>
 
     <script src="script.js"></script>
 </body>

@@ -89,37 +89,47 @@ async function fetchComplaints() {
 
 const AUTH_URL = "http://localhost:8000";
 
+// --- Auth Logic (Updated for Email) ---
+
 async function handleLogin() {
-    const user = document.getElementById('auth-username').value;
+    const email = document.getElementById('auth-email').value; // Get the email
     const pass = document.getElementById('auth-password').value;
     const msg = document.getElementById('auth-msg');
+
+    if (!email || !pass) {
+        msg.innerText = "Please enter email and password";
+        return;
+    }
 
     try {
         const response = await fetch(`${AUTH_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user, password: pass })
+            body: JSON.stringify({ email: email, password: pass }) // Send 'email'
         });
 
+        const data = await response.json();
+
         if (response.ok) {
-            // Hide Overlay
             document.getElementById('auth-overlay').style.display = 'none';
-            // Update Sidebar Name
-            document.querySelector('.user-info span').innerText = user;
+            // Show the name part of the email (e.g., "pranjal" from "pranjal@college.edu")
+            const display_name = email.split('@')[0];
+            document.querySelector('.user-info span').innerText = display_name;
         } else {
-            msg.innerText = "❌ Invalid Credentials";
+            msg.style.color = "red";
+            msg.innerText = `❌ ${data.detail || "Invalid Credentials"}`;
         }
     } catch (e) {
-        msg.innerText = "⚠️ Server Error";
+        msg.innerText = "⚠️ Server Error. Check Backend.";
     }
 }
 
 async function handleRegister() {
-    const user = document.getElementById('auth-username').value;
+    const email = document.getElementById('auth-email').value; // Get the email
     const pass = document.getElementById('auth-password').value;
     const msg = document.getElementById('auth-msg');
 
-    if(!user || !pass) { 
+    if (!email || !pass) { 
         msg.innerText = "Please fill all fields"; 
         return; 
     }
@@ -128,17 +138,16 @@ async function handleRegister() {
         const response = await fetch(`${AUTH_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user, password: pass })
+            body: JSON.stringify({ email: email, password: pass }) // Send 'email'
         });
 
-        const data = await response.json(); // Read the server response
+        const data = await response.json();
 
         if (response.ok) {
             msg.style.color = "green";
-            msg.innerText = "✅ Account Created! Please Login.";
+            msg.innerText = "✅ Account Created! Please Sign In.";
         } else {
             msg.style.color = "red";
-            // Show the ACTUAL error from the server (e.g., "Internal Server Error" or "Missing bcrypt")
             msg.innerText = `❌ ${data.detail || "Registration failed"}`;
         }
     } catch (e) {

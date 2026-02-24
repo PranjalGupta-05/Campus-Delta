@@ -1,112 +1,123 @@
-import sqlite3
-from fastapi import FastAPI, HTTPException, Depends
+import mysql.connector
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from passlib.context import CryptContext
+import bcrypt
 from better_profanity import profanity
 from datetime import datetime
 import random
 
-# Import models from the file we created earlier
 from models import ChatRequest, ComplaintRequest, UserCreate, UserLogin
 
-app = FastAPI(title="SmartCampus AI - Secure")
+app = FastAPI(title="SmartCampus AI - Final Email Version")
 
-# --- Security & Semantics Setup ---
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-profanity.load_censor_words() # Load default bad words
+# --- Security Setup ---
+profanity.load_censor_words()
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"],
 )
 
-DB_NAME = "campus_data.db"
-
-# --- 1. Database & Security Functions ---
+def get_db_connection():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Pranjal@2005",  # <--- MUST UPDATE THIS
+        database="smartcampus"
+    )
 
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    # Existing tables
-    c.execute('''CREATE TABLE IF NOT EXISTS faculty 
-                 (id INTEGER PRIMARY KEY, name TEXT, department TEXT, subject TEXT, cabin TEXT)''')
-    c.execute('''CREATE TABLE IF NOT EXISTS complaints 
-                 (id INTEGER PRIMARY KEY, type TEXT, description TEXT, status TEXT, date TEXT)''')
-    
-    # NEW: Users Table for Auth
-    c.execute('''CREATE TABLE IF NOT EXISTS users 
-                 (username TEXT PRIMARY KEY, password_hash TEXT, role TEXT)''')
-    
-    # Dummy Faculty Data
-    c.execute("SELECT count(*) FROM faculty")
-    if c.fetchone()[0] == 0:
-        faculty_data = [
-            ("Dr. Sharma", "CS", "Data Structures", "Cabin 204, Block A"),
-            ("Prof. Anjali", "CS", "OOPs & Java", "Cabin 101, Block B"),
-        ]
-        c.executemany("INSERT INTO faculty (name, department, subject, cabin) VALUES (?,?,?,?)", faculty_data)
-        conn.commit()
-    conn.close()
+    try:
+        server_conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="Pranjal@2005"   # <--- MUST UPDATE THIS
+        )
+        cursor = server_conn.cursor()
+        cursor.execute("CREATE DATABASE IF NOT EXISTS smartcampus")
+        server_conn.close()
+
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        c.execute('''CREATE TABLE IF NOT EXISTS faculty (
+                     id INT AUTO_INCREMENT PRIMARY KEY, 
+                     name VARCHAR(100), department VARCHAR(50), 
+                     subject VARCHAR(100), cabin VARCHAR(100))''')
+                     
+        c.execute('''CREATE TABLE IF NOT EXISTS complaints (
+                     id INT AUTO_INCREMENT PRIMARY KEY, 
+                     type VARCHAR(50), description TEXT, 
+                     status VARCHAR(20), date VARCHAR(50))''')
+                     
+        c.execute('''CREATE TABLE IF NOT EXISTS users (
+                     email VARCHAR(100) PRIMARY KEY, 
+                     password_hash VARCHAR(255), role VARCHAR(20))''')
+        
+        c.execute("SELECT count(*) FROM faculty")
+        if c.fetchone()[0] == 0:
+            sql = "INSERT INTO faculty (name, department, subject, cabin) VALUES (%s, %s, %s, %s)"
+            faculty_data = [
+                ("Dr. Sharma", "CS", "Data Structures", "Cabin 204, Block A"),
+                ("Prof. Anjali", "CS", "OOPs & Java", "Cabin 101, Block B"),
+            ]
+            c.executemany(sql, faculty_data)
+            conn.commit()
+            print("✅ MySQL Database Initialized for EMAIL!")
+            
+        conn.close()
+    except Exception as e:
+        print(f"❌ Database Setup Error: {e}")
 
 init_db()
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+def get_password_hash(password: str):
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-# --- 2. Auth Endpoints (Sign Up / Sign In) ---
+def verify_password(plain_password: str, hashed_password: str):
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 @app.post("/register")
 async def register(user: UserCreate):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     c = conn.cursor()
-    
-    # Check if user exists
-    c.execute("SELECT * FROM users WHERE username=?", (user.username,))
+    # Check if email exists
+    c.execute("SELECT * FROM users WHERE email=%s", (user.email,))
     if c.fetchone():
         conn.close()
-        raise HTTPException(status_code=400, detail="Username already taken")
+        raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Hash password and save
     hashed_pw = get_password_hash(user.password)
-    c.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", 
-              (user.username, hashed_pw, "student"))
+    # Insert new user using email
+    c.execute("INSERT INTO users (email, password_hash, role) VALUES (%s, %s, %s)", 
+              (user.email, hashed_pw, "student"))
     conn.commit()
     conn.close()
     return {"message": "User registered successfully"}
 
 @app.post("/login")
 async def login(user: UserLogin):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT password_hash FROM users WHERE username=?", (user.username,))
+    # Fetch user by email
+    c.execute("SELECT password_hash FROM users WHERE email=%s", (user.email,))
     row = c.fetchone()
     conn.close()
     
     if not row or not verify_password(user.password, row[0]):
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
     
-    return {"message": "Login successful", "user": user.username}
-
-# --- 3. AI Brain with Semantic Guardrails ---
+    return {"message": "Login successful", "user": user.email}
 
 def get_ai_response(query: str):
-    # SEMANTIC GUARDRAIL: Check for inappropriate language
     if profanity.contains_profanity(query):
-        return "⚠️ **System Alert:** Your message contains inappropriate language. Please maintain academic decorum."
+        return "⚠️ **System Alert:** Your message contains inappropriate language."
 
     query = query.lower()
     
-    # ... (Keep your existing Intent Logic for Faculty, Mess, Labs here) ...
-    # ... Copied from previous code ...
-    
     if "teach" in query or "faculty" in query:
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute("SELECT * FROM faculty")
         rows = c.fetchall()
@@ -124,9 +135,9 @@ def get_ai_response(query: str):
 
     if query.startswith("complaint:"):
         issue = query.replace("complaint:", "").strip()
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_db_connection()
         c = conn.cursor()
-        c.execute("INSERT INTO complaints (type, description, status, date) VALUES (?, ?, ?, ?)", 
+        c.execute("INSERT INTO complaints (type, description, status, date) VALUES (%s, %s, %s, %s)", 
                   ("General", issue, "Open", str(datetime.now())))
         conn.commit()
         conn.close()
@@ -136,8 +147,7 @@ def get_ai_response(query: str):
 
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest):
-    response_text = get_ai_response(req.message)
-    return {"reply": response_text}
+    return {"reply": get_ai_response(req.message)}
 
 if __name__ == "__main__":
     import uvicorn
