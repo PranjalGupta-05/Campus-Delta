@@ -6,7 +6,8 @@ from better_profanity import profanity
 from datetime import datetime
 import random
 
-from models import ChatRequest, ComplaintRequest, UserCreate, UserLogin
+# Notice we added FacultyCreate here!
+from models import ChatRequest, ComplaintRequest, UserCreate, UserLogin, FacultyCreate
 
 app = FastAPI(title="SmartCampus AI - Final Email Version")
 
@@ -21,7 +22,7 @@ def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="Pranjal@2005",  # <--- MUST UPDATE THIS
+        password="Pranjal@2005",  # Your password is kept safe here
         database="smartcampus"
     )
 
@@ -30,7 +31,7 @@ def init_db():
         server_conn = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="Pranjal@2005"   # <--- MUST UPDATE THIS
+            password="Pranjal@2005"   
         )
         cursor = server_conn.cursor()
         cursor.execute("CREATE DATABASE IF NOT EXISTS smartcampus")
@@ -39,10 +40,18 @@ def init_db():
         conn = get_db_connection()
         c = conn.cursor()
         
+        # --- UPDATED: Advanced Faculty Table ---
         c.execute('''CREATE TABLE IF NOT EXISTS faculty (
                      id INT AUTO_INCREMENT PRIMARY KEY, 
-                     name VARCHAR(100), department VARCHAR(50), 
-                     subject VARCHAR(100), cabin VARCHAR(100))''')
+                     name VARCHAR(100), 
+                     department VARCHAR(50), 
+                     subject VARCHAR(100), 
+                     cabin VARCHAR(100),
+                     teaching_skills VARCHAR(255),
+                     behaviour VARCHAR(255),
+                     internals VARCHAR(100),
+                     exam_markings VARCHAR(100),
+                     total_average FLOAT)''')
                      
         c.execute('''CREATE TABLE IF NOT EXISTS complaints (
                      id INT AUTO_INCREMENT PRIMARY KEY, 
@@ -55,14 +64,17 @@ def init_db():
         
         c.execute("SELECT count(*) FROM faculty")
         if c.fetchone()[0] == 0:
-            sql = "INSERT INTO faculty (name, department, subject, cabin) VALUES (%s, %s, %s, %s)"
+            # --- UPDATED: Advanced Dummy Data ---
+            sql = """INSERT INTO faculty 
+                     (name, department, subject, cabin, teaching_skills, behaviour, internals, exam_markings, total_average) 
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
             faculty_data = [
-                ("Dr. Sharma", "CS", "Data Structures", "Cabin 204, Block A"),
-                ("Prof. Anjali", "CS", "OOPs & Java", "Cabin 101, Block B"),
+                ("Dr. Sharma", "CS", "Data Structures", "Cabin 204", "Excellent coding examples", "Friendly but professional", "Fair grading", "Strict evaluation", 8.5),
+                ("Prof. Anjali", "CS", "OOPs & Java", "Cabin 101", "Very detailed theory", "Strict in class", "Generous with marks", "Moderate evaluation", 7.8),
             ]
             c.executemany(sql, faculty_data)
             conn.commit()
-            print("✅ MySQL Database Initialized for EMAIL!")
+            print("✅ MySQL Database Initialized with Advanced Faculty Data!")
             
         conn.close()
     except Exception as e:
@@ -70,6 +82,7 @@ def init_db():
 
 init_db()
 
+# --- Auth Functions ---
 def get_password_hash(password: str):
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
@@ -82,14 +95,12 @@ def verify_password(plain_password: str, hashed_password: str):
 async def register(user: UserCreate):
     conn = get_db_connection()
     c = conn.cursor()
-    # Check if email exists
     c.execute("SELECT * FROM users WHERE email=%s", (user.email,))
     if c.fetchone():
         conn.close()
         raise HTTPException(status_code=400, detail="Email already registered")
     
     hashed_pw = get_password_hash(user.password)
-    # Insert new user using email
     c.execute("INSERT INTO users (email, password_hash, role) VALUES (%s, %s, %s)", 
               (user.email, hashed_pw, "student"))
     conn.commit()
@@ -100,7 +111,6 @@ async def register(user: UserCreate):
 async def login(user: UserLogin):
     conn = get_db_connection()
     c = conn.cursor()
-    # Fetch user by email
     c.execute("SELECT password_hash FROM users WHERE email=%s", (user.email,))
     row = c.fetchone()
     conn.close()
@@ -110,6 +120,28 @@ async def login(user: UserLogin):
     
     return {"message": "Login successful", "user": user.email}
 
+# --- NEW: Add Faculty Endpoint ---
+@app.post("/add-faculty")
+async def add_faculty(faculty: FacultyCreate):
+    conn = get_db_connection()
+    c = conn.cursor()
+    try:
+        c.execute(
+            """INSERT INTO faculty 
+               (name, department, subject, cabin, teaching_skills, behaviour, internals, exam_markings, total_average) 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            (faculty.name, faculty.department, faculty.subject, faculty.cabin, 
+             faculty.teaching_skills, faculty.behaviour, faculty.internals, 
+             faculty.exam_markings, faculty.total_average)
+        )
+        conn.commit()
+        return {"message": f"✅ Successfully added {faculty.name} to the database with a {faculty.total_average}/5 rating!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+# --- AI Logic ---
 def get_ai_response(query: str):
     if profanity.contains_profanity(query):
         return "⚠️ **System Alert:** Your message contains inappropriate language."
@@ -119,12 +151,14 @@ def get_ai_response(query: str):
     if "teach" in query or "faculty" in query:
         conn = get_db_connection()
         c = conn.cursor()
+        # Fetching all advanced data
         c.execute("SELECT * FROM faculty")
         rows = c.fetchall()
         conn.close()
         for row in rows:
+            # row[3] is subject, row[1] is name, row[4] is cabin, row[9] is total_average
             if row[3].lower() in query:
-                return f"👨‍🏫 {row[1]} teaches {row[3]}. Cabin: {row[4]}."
+                return f"👨‍🏫 {row[1]} teaches {row[3]}. Cabin: {row[4]}. Student Rating: {row[9]}/10."
         return "👨‍🏫 I couldn't find that faculty. Try asking 'Who teaches Java?'"
 
     if "mess" in query:

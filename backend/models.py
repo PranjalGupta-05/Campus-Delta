@@ -45,3 +45,14 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: str  # STRICTLY EMAIL
     password: str
+
+class FacultyCreate(BaseModel):
+    name: str
+    department: str
+    subject: str
+    cabin: str
+    teaching_skills: str
+    behaviour: str
+    internals: str
+    exam_markings: str
+    total_average: float
