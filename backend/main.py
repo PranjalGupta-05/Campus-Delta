@@ -5,6 +5,7 @@ import bcrypt
 from better_profanity import profanity
 from datetime import datetime
 import random
+from google import genai
 
 # Notice we added FacultyCreate here!
 from models import ChatRequest, ComplaintRequest, UserCreate, UserLogin, FacultyCreate
@@ -82,6 +83,10 @@ def init_db():
 
 init_db()
 
+# --- AI Setup ---
+GEMINI_API_KEY = "AIzaSyAEx68Yhzitr-RsEibyBo5KoWsQajz7Gqs"  # <--- UPDATE THIS
+client = genai.Client(api_key=GEMINI_API_KEY)
+
 # --- Auth Functions ---
 def get_password_hash(password: str):
     salt = bcrypt.gensalt()
@@ -146,29 +151,11 @@ def get_ai_response(query: str):
     if profanity.contains_profanity(query):
         return "⚠️ **System Alert:** Your message contains inappropriate language."
 
-    query = query.lower()
+    query_lower = query.lower()
     
-    if "teach" in query or "faculty" in query:
-        conn = get_db_connection()
-        c = conn.cursor()
-        # Fetching all advanced data
-        c.execute("SELECT * FROM faculty")
-        rows = c.fetchall()
-        conn.close()
-        for row in rows:
-            # row[3] is subject, row[1] is name, row[4] is cabin, row[9] is total_average
-            if row[3].lower() in query:
-                return f"👨‍🏫 {row[1]} teaches {row[3]}. Cabin: {row[4]}. Student Rating: {row[9]}/10."
-        return "👨‍🏫 I couldn't find that faculty. Try asking 'Who teaches Java?'"
-
-    if "mess" in query:
-        return "🍛 Today's Menu: Rajma Chawal & Curd. Dinner: Egg Curry."
-
-    if "complaint" in query:
-        return "🛠️ Type 'Complaint: [Issue]' to register a ticket."
-
-    if query.startswith("complaint:"):
-        issue = query.replace("complaint:", "").strip()
+    # 1. Handle Complaints directly (No AI needed for this, just save to DB)
+    if query_lower.startswith("complaint:"):
+        issue = query_lower.replace("complaint:", "").strip()
         conn = get_db_connection()
         c = conn.cursor()
         c.execute("INSERT INTO complaints (type, description, status, date) VALUES (%s, %s, %s, %s)", 
@@ -177,7 +164,64 @@ def get_ai_response(query: str):
         conn.close()
         return f"✅ Complaint Registered. ID #{random.randint(1000,9999)}."
 
-    return "🤖 I am SmartCampus AI. Ask me about Faculty, Mess, or Complaints."
+    # 2. Secretly fetch context from MySQL based on what the student asked
+    db_context = ""
+    
+    # If they ask about teachers, grab the faculty table
+    if any(word in query_lower for word in ["teach", "faculty", "professor", "sir", "ma'am"]):
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT name, department, subject, cabin, total_average FROM faculty")
+        rows = c.fetchall()
+        conn.close()
+        if rows:
+            db_context += "College Faculty Data:\n"
+            for row in rows:
+                db_context += f"- {row[0]} teaches {row[2]} (Cabin: {row[3]}). Rating: {row[4]}/10.\n"
+
+    # If they ask about food, grab the mess_menu table
+    if any(word in query_lower for word in ["mess", "menu", "breakfast", "lunch", "dinner", "snack", "food"]):
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT day_of_week, breakfast, lunch, high_tea, dinner FROM mess_menu")
+        rows = c.fetchall()
+        conn.close()
+        if rows:
+            db_context += "Weekly Boys Mess Menu:\n"
+            for row in rows:
+                db_context += f"- {row[0]}: Breakfast: {row[1]} | Lunch: {row[2]} | Snacks: {row[3]} | Dinner: {row[4]}\n"
+
+    # 3. Create the prompt instruction for Gemini
+    current_day = datetime.now().strftime('%A')  # This gets today's actual day (e.g., "Friday")
+    
+    prompt = f"""
+    You are 'Campus Assistant', a friendly, helpful, and concise AI chatbot for a college.
+    
+    *** IMPORTANT CONTEXT: Today is {current_day}. ***
+    
+    Use the provided 'Database Information' to answer the student's question accurately.
+    - Write a natural, conversational response. Use emojis nicely.
+    - Do NOT mention that you are reading from a database or a context block.
+    - If the student asks a general greeting (like 'hello' or 'how are you'), just answer naturally.
+    - If the database info does not contain the answer to a college-specific question, politely say you don't have that information right now.
+
+    Database Information:
+    {db_context}
+
+    Student's Question: {query}
+    """
+
+    # 4. Ask Gemini to read the prompt and generate the final answer
+    try:
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',  # <--- UPGRADE THIS LINE!
+            contents=prompt
+        )
+        return response.text
+    except Exception as e:
+        print(f"AI Error: {e}")
+        return "🤖 I'm having trouble connecting to my AI brain right now. Please try again later!"
+    
 
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest):

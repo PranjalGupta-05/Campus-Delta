@@ -25,9 +25,9 @@
                 <i class="fas fa-graduation-cap"></i> Campus Delta
             </div>
             <nav>
-                <button class="active"><i class="fas fa-comment-alt"></i> Chat</button>
+                <button id="nav-chat" class="active" onclick="switchTab('chat')"><i class="fas fa-comment-alt"></i> Chat</button>
                 <button onclick="alert('Demo: Notes Module')"><i class="fas fa-book"></i> Notes</button>
-                <button onclick="alert('Demo: Mess Menu')"><i class="fas fa-utensils"></i> Mess</button>
+                <button id="nav-mess" onclick="switchTab('mess')"><i class="fas fa-utensils"></i> Mess</button>
                 <button onclick="fetchComplaints()"><i class="fas fa-exclamation-circle"></i> Admin</button>
             </nav>
             <div class="user-profile">
@@ -52,6 +52,10 @@
                     <p>Hello! 👋 I'm your Campus Assistant. Ask me anything!</p>
                     <span class="time">Just now</span>
                 </div>
+            </div>
+
+            <div id="mess-section" style="display: none; width: 100%; height: 100%; padding: 0; margin: 0;">
+                <img src="mess_menu.jpg" alt="Mess Menu" style="width: 100%; height: 100%; object-fit: fill; border-radius: 15px;">
             </div>
             
             <div class="suggestions">
@@ -88,8 +92,46 @@
 </div>
 </div>
 
+
+
 <!-- <footer><p>&copy; All Rights Of the Model Are Reserved To TEAM 118.</p></footer> -->
 
     <script src="script.js"></script>
+    <script>
+    function switchTab(tabName) {
+        // 1. Grab the page sections
+        const chatBox = document.getElementById('chat-box');
+        const suggestions = document.querySelector('.suggestions');
+        const inputBox = document.querySelector('.input-area');
+        const messSection = document.getElementById('mess-section');
+
+        // 2. Grab the sidebar buttons
+        const chatBtn = document.getElementById('nav-chat');
+        const messBtn = document.getElementById('nav-mess');
+
+        if (tabName === 'chat') {
+            // Show Chat Elements
+            if (chatBox) chatBox.style.display = 'flex';
+            if (suggestions) suggestions.style.display = 'flex';
+            if (inputBox) inputBox.style.display = 'flex';
+            if (messSection) messSection.style.display = 'none';
+
+            // Move the white highlight to the Chat button
+            if (chatBtn) chatBtn.classList.add('active');
+            if (messBtn) messBtn.classList.remove('active');
+
+        } else if (tabName === 'mess') {
+            // Hide Chat Elements
+            if (chatBox) chatBox.style.display = 'none';
+            if (suggestions) suggestions.style.display = 'none';
+            if (inputBox) inputBox.style.display = 'none';
+            if (messSection) messSection.style.display = 'block';
+
+            // Move the white highlight to the Mess button
+            if (chatBtn) chatBtn.classList.remove('active');
+            if (messBtn) messBtn.classList.add('active');
+        }
+    }
+    </script>
 </body>
 </html>
