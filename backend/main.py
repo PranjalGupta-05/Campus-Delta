@@ -6,6 +6,8 @@ from better_profanity import profanity
 from datetime import datetime
 import random
 from google import genai
+import os
+from dotenv import load_dotenv
 
 # Notice we added FacultyCreate here!
 from models import ChatRequest, ComplaintRequest, UserCreate, UserLogin, FacultyCreate
@@ -84,7 +86,11 @@ def init_db():
 init_db()
 
 # --- AI Setup ---
-GEMINI_API_KEY = "AIzaSyAEx68Yhzitr-RsEibyBo5KoWsQajz7Gqs"  # <--- UPDATE THIS
+# This line opens the "vault" (.env file)
+load_dotenv() 
+
+# This line grabs the secret key securely
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 # --- Auth Functions ---
@@ -177,7 +183,7 @@ def get_ai_response(query: str):
         if rows:
             db_context += "College Faculty Data:\n"
             for row in rows:
-                db_context += f"- {row[0]} teaches {row[2]} (Cabin: {row[3]}). Rating: {row[4]}/10.\n"
+                db_context += f"- {row[0]} teaches {row[2]} (Cabin: {row[3]}). Rating: {row[4]}/5.\n"
 
     # If they ask about food, grab the mess_menu table
     if any(word in query_lower for word in ["mess", "menu", "breakfast", "lunch", "dinner", "snack", "food"]):

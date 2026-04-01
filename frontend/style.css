@@ -34,18 +34,76 @@ h1 { font-size: 3rem; margin-bottom: 10px; }
 #app-container { display: flex; height: 100vh; }
 
 /* Sidebar */
+/* --- 1. The Main Sidebar --- */
 .sidebar {
-    width: 260px; background: rgb(180, 192, 224); padding: 20px; display: flex; flex-direction: column;
+    width: 260px; 
+    background: rgb(180, 192, 224); 
+    padding: 20px; 
     border-right: 1px solid #ddd;
+    display: flex;         
+    flex-direction: column; 
+    /* Removed 'align-items: flex-start' so the nav buttons stretch full width naturally */
 }
-.brand { font-size: 1.5rem; font-weight: bold; color: var(--primary); margin-bottom: 40px; }
+
+/* Make sure the nav block takes full width */
+.sidebar nav {
+    width: 100%;
+}
+
+.brand { 
+    font-size: 1.5rem; 
+    font-weight: bold; 
+    color: var(--primary); 
+    margin-bottom: 40px; 
+}
+
 .sidebar nav button {
-    width: 100%; padding: 12px; margin-bottom: 10px; border: none; background: transparent;
-    text-align: left; font-size: 1rem; color: #666; cursor: pointer; border-radius: 8px;
+    width: 100%; 
+    padding: 12px; 
+    margin-bottom: 10px; 
+    border: none; 
+    background: transparent;
+    text-align: left; 
+    font-size: 1rem; 
+    color: #666; 
+    cursor: pointer; 
+    border-radius: 8px;
 }
-.sidebar nav button:hover, .sidebar nav button.active { background: var(--primary-light); color: var(--primary); }
-.user-profile { margin-top: auto; display: flex; align-items: center; gap: 10px; }
-.user-profile img { width: 40px; border-radius: 50%; }
+
+.sidebar nav button:hover, .sidebar nav button.active { 
+    background: var(--primary-light); 
+    color: var(--primary); 
+}
+
+/* --- 2. The User Profile --- */
+.user-profile { 
+    margin-top: auto; /* THIS is the engine that pushes everything to the bottom! */
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    width: 100%;
+}
+
+.user-profile img { 
+    width: 40px; 
+    border-radius: 50%; 
+}
+
+/* --- 3. The Team Footer --- */
+.team-footer {
+    text-align: center;
+    padding-top: 15px;
+    padding-bottom: 5px;
+    font-size: 0.75rem; 
+    color: #555; /* Slightly darker so it's readable on the blue background */
+    width: 100%;
+    margin-top: 15px; /* Notice we removed 'auto' from here! */
+    border-top: 1px solid rgba(0, 0, 0, 0.1); 
+}
+
+.team-footer p {
+    margin: 0;
+}
 
 /* Chat Interface */
 .chat-interface { flex: 1; display: flex; flex-direction: column; background: rgb(180, 192, 224); }
@@ -107,3 +165,4 @@ input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; out
 }
 
 #auth-msg { color: red; margin-top: 10px; font-size: 0.9rem; }
+
